@@ -51,6 +51,15 @@ class OllamaService implements LlmService {
     }
   }
 
+  @override
+  Future<Message> sendMessageWithImage(
+    List<Message> messages,
+    String base64Image,
+  ) async {
+    // Ollama currently has no direct image input support; ignore the image.
+    return sendMessage(messages);
+  }
+
   String _formatMessagesForOllama(List<Message> messages) {
     // Simple formatting for Ollama
     // This is a basic implementation and might need to be adjusted based on the specific model

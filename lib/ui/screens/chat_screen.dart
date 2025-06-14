@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/message.dart';
 import '../../providers/chat_providers.dart';
 import '../widgets/message_bubble.dart';
@@ -89,6 +93,7 @@ class MessageInput extends ConsumerStatefulWidget {
 class _MessageInputState extends ConsumerState<MessageInput> {
   final TextEditingController _controller = TextEditingController();
   bool _canSend = false;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -106,16 +111,40 @@ class _MessageInputState extends ConsumerState<MessageInput> {
   void _updateCanSend() {
     final text = _controller.text.trim();
     setState(() {
-      _canSend = text.isNotEmpty;
+      _canSend = text.isNotEmpty || _selectedImage != null;
     });
   }
 
-  void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+        _updateCanSend();
+      });
+    }
+  }
 
-    ref.read(activeChatSessionProvider.notifier).sendMessage(text);
+  Future<void> _sendMessage() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty && _selectedImage == null) return;
+
+    if (_selectedImage != null) {
+      final bytes = await _selectedImage!.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      await ref
+          .read(activeChatSessionProvider.notifier)
+          .sendMessageWithImage(text, base64Image);
+    } else {
+      await ref.read(activeChatSessionProvider.notifier).sendMessage(text);
+    }
+
     _controller.clear();
+    setState(() {
+      _selectedImage = null;
+      _updateCanSend();
+    });
   }
 
   @override
@@ -150,6 +179,14 @@ class _MessageInputState extends ConsumerState<MessageInput> {
               },
               enabled: !isLoading && activeSession != null,
             ),
+          ),
+          const SizedBox(width: 8.0),
+          IconButton(
+            icon: Icon(
+              _selectedImage == null ? Icons.attach_file : Icons.check,
+            ),
+            onPressed: isLoading ? null : _pickImage,
+            color: Theme.of(context).colorScheme.secondary,
           ),
           const SizedBox(width: 8.0),
           FutureBuilder<bool>(
