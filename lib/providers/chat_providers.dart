@@ -138,4 +138,46 @@ class ActiveChatSessionNotifier extends StateNotifier<ChatSession?> {
       _ref.read(isLoadingProvider.notifier).state = false;
     }
   }
+
+  Future<void> sendMessageWithImage(
+    String content,
+    String base64Image,
+  ) async {
+    if (state == null) return;
+
+    final userMessage = Message(
+      role: MessageRole.user,
+      content: content,
+    );
+
+    final updatedSession = state!.addMessage(userMessage);
+    state = updatedSession;
+    _ref.read(chatSessionsProvider.notifier).updateSession(updatedSession);
+
+    _ref.read(isLoadingProvider.notifier).state = true;
+
+    try {
+      final llmService = _ref.read(selectedLlmServiceProvider);
+
+      final assistantMessage = await llmService.sendMessageWithImage(
+        updatedSession.messages,
+        base64Image,
+      );
+
+      final finalSession = updatedSession.addMessage(assistantMessage);
+      state = finalSession;
+      _ref.read(chatSessionsProvider.notifier).updateSession(finalSession);
+    } catch (e) {
+      final errorMessage = Message(
+        role: MessageRole.assistant,
+        content: 'Error: ${e.toString()}',
+      );
+
+      final finalSession = updatedSession.addMessage(errorMessage);
+      state = finalSession;
+      _ref.read(chatSessionsProvider.notifier).updateSession(finalSession);
+    } finally {
+      _ref.read(isLoadingProvider.notifier).state = false;
+    }
+  }
 }
