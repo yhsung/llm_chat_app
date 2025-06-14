@@ -74,6 +74,16 @@ class AzureOpenAiService implements LlmService {
       throw Exception('Error communicating with Azure OpenAI: $e');
     }
   }
+
+  @override
+  Future<Message> sendMessageWithImage(
+    List<Message> messages,
+    String base64Image,
+  ) async {
+    // Azure OpenAI does not currently support image inputs via this interface.
+    // Fallback to sending the text-only message.
+    return sendMessage(messages);
+  }
   
   @override
   Future<List<String>> getAvailableModels() async {
