@@ -9,6 +9,12 @@ abstract class LlmService {
   
   /// Send a message to the LLM service and get a response
   Future<Message> sendMessage(List<Message> messages);
+
+  /// Send a message with an attached image encoded as base64
+  Future<Message> sendMessageWithImage(
+    List<Message> messages,
+    String base64Image,
+  );
   
   /// Get the available models for this service
   Future<List<String>> getAvailableModels();
