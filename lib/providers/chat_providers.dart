@@ -148,6 +148,7 @@ class ActiveChatSessionNotifier extends StateNotifier<ChatSession?> {
     final userMessage = Message(
       role: MessageRole.user,
       content: content,
+      imageBase64: base64Image,
     );
 
     final updatedSession = state!.addMessage(userMessage);
