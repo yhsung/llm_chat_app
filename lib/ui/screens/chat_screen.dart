@@ -37,9 +37,7 @@ class ChatScreen extends ConsumerWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ChatHistoryScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const ChatHistoryScreen()),
               );
             },
             tooltip: 'Chat History',
@@ -221,29 +219,34 @@ class _MessageInputState extends ConsumerState<MessageInput> {
                   enabled: !isLoading && activeSession != null,
                 ),
               ),
-          const SizedBox(width: 8.0),
-          IconButton(
-            icon: Icon(
-              _selectedImage == null ? Icons.attach_file : Icons.check,
-            ),
-            onPressed: isLoading ? null : _pickImage,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-          const SizedBox(width: 8.0),
-          FutureBuilder<bool>(
-            future: isConfigured,
-            builder: (context, snapshot) {
-              final isReady = snapshot.data ?? false;
+              const SizedBox(width: 8.0),
+              IconButton(
+                icon: Icon(
+                  _selectedImage == null ? Icons.attach_file : Icons.check,
+                ),
+                onPressed: isLoading ? null : _pickImage,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              const SizedBox(width: 8.0),
+              FutureBuilder<bool>(
+                future: isConfigured,
+                builder: (context, snapshot) {
+                  final isReady = snapshot.data ?? false;
 
-              return IconButton(
-                icon: const Icon(Icons.send),
-                onPressed:
-                    _canSend && !isLoading && activeSession != null && isReady
-                    ? _sendMessage
-                    : null,
-                color: Theme.of(context).colorScheme.primary,
-              );
-            },
+                  return IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed:
+                        _canSend &&
+                            !isLoading &&
+                            activeSession != null &&
+                            isReady
+                        ? _sendMessage
+                        : null,
+                    color: Theme.of(context).colorScheme.primary,
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
