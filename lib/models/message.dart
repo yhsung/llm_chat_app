@@ -1,10 +1,6 @@
 import 'package:uuid/uuid.dart';
 
-enum MessageRole {
-  user,
-  assistant,
-  system,
-}
+enum MessageRole { user, assistant, system }
 
 extension MessageRoleExtension on MessageRole {
   String get name {
@@ -24,25 +20,29 @@ class Message {
   final MessageRole role;
   final String content;
   final DateTime timestamp;
+  final String? imageBase64;
 
   Message({
     String? id,
     required this.role,
     required this.content,
+    this.imageBase64,
     DateTime? timestamp,
-  })  : id = id ?? const Uuid().v4(),
-        timestamp = timestamp ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       timestamp = timestamp ?? DateTime.now();
 
   Message copyWith({
     String? id,
     MessageRole? role,
     String? content,
+    String? imageBase64,
     DateTime? timestamp,
   }) {
     return Message(
       id: id ?? this.id,
       role: role ?? this.role,
       content: content ?? this.content,
+      imageBase64: imageBase64 ?? this.imageBase64,
       timestamp: timestamp ?? this.timestamp,
     );
   }
@@ -52,6 +52,7 @@ class Message {
       'id': id,
       'role': role.toString().split('.').last,
       'content': content,
+      if (imageBase64 != null) 'imageBase64': imageBase64,
       'timestamp': timestamp.toIso8601String(),
     };
   }
@@ -64,6 +65,7 @@ class Message {
         orElse: () => MessageRole.user,
       ),
       content: json['content'],
+      imageBase64: json['imageBase64'],
       timestamp: DateTime.parse(json['timestamp']),
     );
   }
