@@ -19,3 +19,4 @@ samples, guidance on mobile development, and a full API reference.
 
 - Attach images to your chat messages.
 - Preview a thumbnail of the attached image before sending.
+- Thumbnail preview appears in the chat after sending a message with an image.
