@@ -144,6 +144,7 @@ class _OpenAiSettingsState extends ConsumerState<OpenAiSettings> {
     try {
       final openAiService = ref.read(llmServiceFactoryProvider).openAiService;
       await openAiService.setApiKey(apiKey);
+      await _loadSettings();
 
       ScaffoldMessenger.of(
         context,
@@ -338,6 +339,8 @@ class _AzureOpenAiSettingsState extends ConsumerState<AzureOpenAiSettings> {
         await azureService.setModel(_selectedModel!);
       }
 
+      await _loadSettings();
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Settings saved')));
@@ -500,6 +503,8 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
       if (_selectedModel != null) {
         await ollamaService.setModel(_selectedModel!);
       }
+
+      await _loadSettings();
 
       ScaffoldMessenger.of(
         context,
