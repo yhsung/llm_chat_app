@@ -7,6 +7,51 @@ import '../../providers/chat_providers.dart';
 class ChatHistoryScreen extends ConsumerWidget {
   const ChatHistoryScreen({super.key});
 
+  void _showRenameDialog(
+      BuildContext context, WidgetRef ref, ChatSession session) {
+    final controller = TextEditingController(text: session.title);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Rename Chat'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Chat name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newName = controller.text.trim();
+                if (newName.isNotEmpty) {
+                  ref
+                      .read(chatSessionsProvider.notifier)
+                      .renameSession(session.id, newName);
+                  final updated = ref
+                      .read(chatSessionsProvider.notifier)
+                      .getSessionById(session.id);
+                  final active = ref.read(activeChatSessionProvider);
+                  if (updated != null && active?.id == session.id) {
+                    ref
+                        .read(activeChatSessionProvider.notifier)
+                        .setActiveSession(updated);
+                  }
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(chatSessionsProvider);
@@ -30,7 +75,17 @@ class ChatHistoryScreen extends ConsumerWidget {
             title: Text(session.title),
             subtitle: Text('Last updated: '
                 '${DateFormat.yMd().add_jm().format(session.updatedAt)}'),
-            trailing: isActive ? const Icon(Icons.check) : null,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isActive) const Icon(Icons.check),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Rename',
+                  onPressed: () => _showRenameDialog(context, ref, session),
+                ),
+              ],
+            ),
             onTap: () {
               ref
                   .read(activeChatSessionProvider.notifier)

@@ -52,6 +52,16 @@ class ChatSessionsNotifier extends StateNotifier<List<ChatSession>> {
   void deleteSession(String sessionId) {
     state = state.where((session) => session.id != sessionId).toList();
   }
+
+  void renameSession(String sessionId, String newTitle) {
+    state = [
+      for (final session in state)
+        if (session.id == sessionId)
+          session.copyWith(title: newTitle)
+        else
+          session,
+    ];
+  }
   
   ChatSession? getSessionById(String id) {
     try {
