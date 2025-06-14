@@ -2,15 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'ui/screens/chat_screen.dart';
 import 'ui/screens/settings_screen.dart';
-import 'models/chat_session.dart';
 import 'providers/chat_providers.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -54,19 +49,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final activeSession = ref.read(activeChatSessionProvider);
       if (activeSession == null) {
-        ref.read(activeChatSessionProvider.notifier).createNewSession(
-              ref.read(selectedServiceTypeProvider),
-            );
+        ref
+            .read(activeChatSessionProvider.notifier)
+            .createNewSession(ref.read(selectedServiceTypeProvider));
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      const ChatScreen(),
-      const SettingsScreen(),
-    ];
+    final List<Widget> screens = [const ChatScreen(), const SettingsScreen()];
 
     return Scaffold(
       body: screens[_selectedIndex],
@@ -78,14 +70,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           });
         },
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+          NavigationDestination(icon: Icon(Icons.chat), label: 'Chat'),
+          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );

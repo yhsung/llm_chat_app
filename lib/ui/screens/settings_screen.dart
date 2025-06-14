@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/chat_session.dart';
 import '../../providers/chat_providers.dart';
-import '../../services/openai_service.dart';
-import '../../services/azure_openai_service.dart';
-import '../../services/ollama_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -12,11 +9,9 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedServiceType = ref.watch(selectedServiceTypeProvider);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
           const SizedBox(height: 16),
@@ -59,7 +54,7 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
           const Divider(),
-          
+
           // Service-specific settings
           Builder(
             builder: (context) {
@@ -91,104 +86,104 @@ class _OpenAiSettingsState extends ConsumerState<OpenAiSettings> {
   String? _selectedModel;
   List<String> _availableModels = [];
   bool _isLoading = false;
-  
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
-  
+
   @override
   void dispose() {
     _apiKeyController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadSettings() async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final openAiService = ref.read(llmServiceFactoryProvider).openAiService;
-      
+
       // Load API key
       final apiKey = await openAiService.getApiKey();
       _apiKeyController.text = apiKey ?? '';
-      
+
       // Load current model
       final currentModel = await openAiService.getCurrentModel();
-      
+
       // Load available models
       final models = await openAiService.getAvailableModels();
-      
+
       setState(() {
         _selectedModel = currentModel;
         _availableModels = models;
       });
     } catch (e) {
       // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading settings: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading settings: $e')));
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-  
+
   Future<void> _saveApiKey() async {
     final apiKey = _apiKeyController.text.trim();
     if (apiKey.isEmpty) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final openAiService = ref.read(llmServiceFactoryProvider).openAiService;
       await openAiService.setApiKey(apiKey);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('API key saved')),
-      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('API key saved')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving API key: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving API key: $e')));
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-  
+
   Future<void> _saveModel() async {
     if (_selectedModel == null) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final openAiService = ref.read(llmServiceFactoryProvider).openAiService;
       await openAiService.setModel(_selectedModel!);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Model saved')),
-      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Model saved')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving model: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving model: $e')));
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -223,10 +218,7 @@ class _OpenAiSettingsState extends ConsumerState<OpenAiSettings> {
             ),
             value: _selectedModel,
             items: _availableModels.map((model) {
-              return DropdownMenuItem<String>(
-                value: model,
-                child: Text(model),
-              );
+              return DropdownMenuItem<String>(value: model, child: Text(model));
             }).toList(),
             onChanged: (value) {
               setState(() {
@@ -250,7 +242,8 @@ class AzureOpenAiSettings extends ConsumerStatefulWidget {
   const AzureOpenAiSettings({super.key});
 
   @override
-  ConsumerState<AzureOpenAiSettings> createState() => _AzureOpenAiSettingsState();
+  ConsumerState<AzureOpenAiSettings> createState() =>
+      _AzureOpenAiSettingsState();
 }
 
 class _AzureOpenAiSettingsState extends ConsumerState<AzureOpenAiSettings> {
@@ -260,13 +253,13 @@ class _AzureOpenAiSettingsState extends ConsumerState<AzureOpenAiSettings> {
   String? _selectedModel;
   List<String> _availableModels = [];
   bool _isLoading = false;
-  
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
-  
+
   @override
   void dispose() {
     _apiKeyController.dispose();
@@ -274,87 +267,91 @@ class _AzureOpenAiSettingsState extends ConsumerState<AzureOpenAiSettings> {
     _apiVersionController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadSettings() async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
-      final azureService = ref.read(llmServiceFactoryProvider).azureOpenAiService;
-      
+      final azureService = ref
+          .read(llmServiceFactoryProvider)
+          .azureOpenAiService;
+
       // Load API key
       final apiKey = await azureService.getApiKey();
       _apiKeyController.text = apiKey ?? '';
-      
+
       // Load endpoint
       final endpoint = await azureService.getEndpoint();
       _endpointController.text = endpoint ?? '';
-      
+
       // Load API version
       final apiVersion = await azureService.getApiVersion();
       _apiVersionController.text = apiVersion;
-      
+
       // Load current model
       final currentModel = await azureService.getCurrentModel();
-      
+
       // Load available models
       final models = await azureService.getAvailableModels();
-      
+
       setState(() {
         _selectedModel = currentModel;
         _availableModels = models;
       });
     } catch (e) {
       // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading settings: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading settings: $e')));
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-  
+
   Future<void> _saveSettings() async {
     final apiKey = _apiKeyController.text.trim();
     final endpoint = _endpointController.text.trim();
     final apiVersion = _apiVersionController.text.trim();
-    
+
     if (apiKey.isEmpty || endpoint.isEmpty) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
-      final azureService = ref.read(llmServiceFactoryProvider).azureOpenAiService;
+      final azureService = ref
+          .read(llmServiceFactoryProvider)
+          .azureOpenAiService;
       await azureService.setApiKey(apiKey);
       await azureService.setEndpoint(endpoint);
-      
+
       if (apiVersion.isNotEmpty) {
         await azureService.setApiVersion(apiVersion);
       }
-      
+
       if (_selectedModel != null) {
         await azureService.setModel(_selectedModel!);
       }
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved')),
-      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Settings saved')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving settings: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving settings: $e')));
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -402,10 +399,7 @@ class _AzureOpenAiSettingsState extends ConsumerState<AzureOpenAiSettings> {
             ),
             value: _selectedModel,
             items: _availableModels.map((model) {
-              return DropdownMenuItem<String>(
-                value: model,
-                child: Text(model),
-              );
+              return DropdownMenuItem<String>(value: model, child: Text(model));
             }).toList(),
             onChanged: (value) {
               setState(() {
@@ -441,82 +435,86 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
   String? _selectedModel;
   List<String> _availableModels = [];
   bool _isLoading = false;
-  
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
-  
+
   @override
   void dispose() {
     _endpointController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadSettings() async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final ollamaService = ref.read(llmServiceFactoryProvider).ollamaService;
-      
+
       // Load endpoint
       final endpoint = await ollamaService.getEndpoint();
       _endpointController.text = endpoint;
-      
+
       // Load current model
       final currentModel = await ollamaService.getCurrentModel();
-      
+
       // Load available models
       final models = await ollamaService.getAvailableModels();
-      
+
       setState(() {
-        _selectedModel = currentModel;
         _availableModels = models;
+        if (models.contains(currentModel)) {
+          _selectedModel = currentModel;
+        } else {
+          _selectedModel = null;
+        }
       });
     } catch (e) {
       // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading settings: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading settings: $e')));
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-  
+
   Future<void> _saveSettings() async {
     final endpoint = _endpointController.text.trim();
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final ollamaService = ref.read(llmServiceFactoryProvider).ollamaService;
       await ollamaService.setEndpoint(endpoint);
-      
+
       if (_selectedModel != null) {
         await ollamaService.setModel(_selectedModel!);
       }
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved')),
-      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Settings saved')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving settings: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving settings: $e')));
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -545,10 +543,7 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
             ),
             value: _selectedModel,
             items: _availableModels.map((model) {
-              return DropdownMenuItem<String>(
-                value: model,
-                child: Text(model),
-              );
+              return DropdownMenuItem<String>(value: model, child: Text(model));
             }).toList(),
             onChanged: (value) {
               setState(() {

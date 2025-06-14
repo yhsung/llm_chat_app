@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../models/message.dart';
-import '../../models/chat_session.dart';
 import '../../providers/chat_providers.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/service_selector.dart';
@@ -14,7 +12,7 @@ class ChatScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final activeSession = ref.watch(activeChatSessionProvider);
     final isLoading = ref.watch(isLoadingProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(activeSession?.title ?? 'New Chat'),
@@ -23,7 +21,9 @@ class ChatScreen extends ConsumerWidget {
             icon: const Icon(Icons.add),
             onPressed: () {
               final serviceType = ref.read(selectedServiceTypeProvider);
-              ref.read(activeChatSessionProvider.notifier).createNewSession(serviceType);
+              ref
+                  .read(activeChatSessionProvider.notifier)
+                  .createNewSession(serviceType);
             },
             tooltip: 'New Chat',
           ),
@@ -34,9 +34,7 @@ class ChatScreen extends ConsumerWidget {
           ? const Center(child: Text('No active chat session'))
           : Column(
               children: [
-                Expanded(
-                  child: MessageList(messages: activeSession.messages),
-                ),
+                Expanded(child: MessageList(messages: activeSession.messages)),
                 if (isLoading)
                   const Padding(
                     padding: EdgeInsets.all(8.0),
@@ -145,10 +143,11 @@ class _MessageInputState extends ConsumerState<MessageInput> {
             future: isConfigured,
             builder: (context, snapshot) {
               final isReady = snapshot.data ?? false;
-              
+
               return IconButton(
                 icon: const Icon(Icons.send),
-                onPressed: _canSend && !isLoading && activeSession != null && isReady
+                onPressed:
+                    _canSend && !isLoading && activeSession != null && isReady
                     ? _sendMessage
                     : null,
                 color: Theme.of(context).colorScheme.primary,
