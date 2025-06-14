@@ -4,6 +4,7 @@ import '../../models/message.dart';
 import '../../providers/chat_providers.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/service_selector.dart';
+import 'chat_history_screen.dart';
 
 class ChatScreen extends ConsumerWidget {
   const ChatScreen({super.key});
@@ -26,6 +27,18 @@ class ChatScreen extends ConsumerWidget {
                   .createNewSession(serviceType);
             },
             tooltip: 'New Chat',
+          ),
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ChatHistoryScreen(),
+                ),
+              );
+            },
+            tooltip: 'Chat History',
           ),
           const ServiceSelector(),
         ],
