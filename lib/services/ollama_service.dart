@@ -118,6 +118,27 @@ class OllamaService implements LlmService {
     return await _secureStorage.read(key: _modelKey) ?? _defaultModel;
   }
 
+  Future<List<String>> getAvailableEmbeddingModels() async {
+    final endpoint =
+        await _secureStorage.read(key: _endpointKey) ?? _defaultEndpoint;
+
+    try {
+      final response = await _dio.get('$endpoint/api/tags');
+
+      if (response.statusCode == 200) {
+        final models = (response.data['models'] as List)
+            .map((model) => model['name'] as String)
+            .where((name) => name.contains('embed'))
+            .toList();
+        return models.isEmpty ? [_defaultEmbeddingModel] : models;
+      } else {
+        return [_defaultEmbeddingModel];
+      }
+    } catch (e) {
+      return [_defaultEmbeddingModel];
+    }
+  }
+
   Future<void> setEmbeddingModel(String model) async {
     await _secureStorage.write(key: _embeddingModelKey, value: model);
   }

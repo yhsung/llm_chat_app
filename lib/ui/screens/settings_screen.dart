@@ -435,9 +435,10 @@ class OllamaSettings extends ConsumerStatefulWidget {
 
 class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
   final TextEditingController _endpointController = TextEditingController();
-  final TextEditingController _embeddingModelController = TextEditingController();
   String? _selectedModel;
+  String? _selectedEmbeddingModel;
   List<String> _availableModels = [];
+  List<String> _availableEmbeddingModels = [];
   bool _isLoading = false;
 
   @override
@@ -449,7 +450,6 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
   @override
   void dispose() {
     _endpointController.dispose();
-    _embeddingModelController.dispose();
     super.dispose();
   }
 
@@ -470,17 +470,25 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
 
       // Load embedding model
       final embeddingModel = await ollamaService.getCurrentEmbeddingModel();
-      _embeddingModelController.text = embeddingModel;
 
       // Load available models
       final models = await ollamaService.getAvailableModels();
+      // Load available embedding models
+      final embeddingModels =
+          await ollamaService.getAvailableEmbeddingModels();
 
       setState(() {
         _availableModels = models;
+        _availableEmbeddingModels = embeddingModels;
         if (models.contains(currentModel)) {
           _selectedModel = currentModel;
         } else {
           _selectedModel = null;
+        }
+        if (embeddingModels.contains(embeddingModel)) {
+          _selectedEmbeddingModel = embeddingModel;
+        } else {
+          _selectedEmbeddingModel = null;
         }
       });
     } catch (e) {
@@ -510,9 +518,9 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
         await ollamaService.setModel(_selectedModel!);
       }
 
-      await ollamaService.setEmbeddingModel(
-        _embeddingModelController.text.trim(),
-      );
+      if (_selectedEmbeddingModel != null) {
+        await ollamaService.setEmbeddingModel(_selectedEmbeddingModel!);
+      }
 
       await _loadSettings();
 
@@ -567,12 +575,23 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
             },
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _embeddingModelController,
+          DropdownButtonFormField<String>(
             decoration: const InputDecoration(
               labelText: 'Embedding Model',
               border: OutlineInputBorder(),
             ),
+            value: _selectedEmbeddingModel,
+            items: _availableEmbeddingModels.map((model) {
+              return DropdownMenuItem<String>(
+                value: model,
+                child: Text(model),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedEmbeddingModel = value;
+              });
+            },
           ),
           const SizedBox(height: 16),
           ElevatedButton(
