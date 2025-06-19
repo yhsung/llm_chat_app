@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:pdf_text/pdf_text.dart';
 import '../../models/message.dart';
 import '../../providers/chat_providers.dart';
 import '../widgets/message_bubble.dart';
@@ -92,6 +94,7 @@ class _MessageInputState extends ConsumerState<MessageInput> {
   final TextEditingController _controller = TextEditingController();
   bool _canSend = false;
   File? _selectedImage;
+  File? _selectedPdf;
 
   @override
   void initState() {
@@ -109,7 +112,8 @@ class _MessageInputState extends ConsumerState<MessageInput> {
   void _updateCanSend() {
     final text = _controller.text.trim();
     setState(() {
-      _canSend = text.isNotEmpty || _selectedImage != null;
+      _canSend =
+          text.isNotEmpty || _selectedImage != null || _selectedPdf != null;
     });
   }
 
@@ -124,9 +128,22 @@ class _MessageInputState extends ConsumerState<MessageInput> {
     }
   }
 
+  Future<void> _pickPdf() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedPdf = File(result.files.single.path!);
+        _updateCanSend();
+      });
+    }
+  }
+
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
-    if (text.isEmpty && _selectedImage == null) return;
+    if (text.isEmpty && _selectedImage == null && _selectedPdf == null) return;
 
     if (_selectedImage != null) {
       final bytes = await _selectedImage!.readAsBytes();
@@ -134,6 +151,14 @@ class _MessageInputState extends ConsumerState<MessageInput> {
       await ref
           .read(activeChatSessionProvider.notifier)
           .sendMessageWithImage(text, base64Image);
+    } else if (_selectedPdf != null) {
+      final doc = await PDFDoc.fromFile(_selectedPdf!);
+      final pdfText = await doc.text;
+      final displayText =
+          text.isNotEmpty ? text : 'Summarize PDF: ${_selectedPdf!.path.split('/').last}';
+      await ref
+          .read(activeChatSessionProvider.notifier)
+          .sendMessageWithPdf(displayText, pdfText);
     } else {
       await ref.read(activeChatSessionProvider.notifier).sendMessage(text);
     }
@@ -141,6 +166,7 @@ class _MessageInputState extends ConsumerState<MessageInput> {
     _controller.clear();
     setState(() {
       _selectedImage = null;
+      _selectedPdf = null;
       _updateCanSend();
     });
   }
@@ -194,6 +220,50 @@ class _MessageInputState extends ConsumerState<MessageInput> {
                 ],
               ),
             ),
+          if (_selectedPdf != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.picture_as_pdf, size: 24),
+                        const SizedBox(width: 8),
+                        Text(_selectedPdf!.path.split('/').last),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedPdf = null;
+                        _updateCanSend();
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(2.0),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Row(
             children: [
               Expanded(
@@ -225,6 +295,14 @@ class _MessageInputState extends ConsumerState<MessageInput> {
                   _selectedImage == null ? Icons.attach_file : Icons.check,
                 ),
                 onPressed: isLoading ? null : _pickImage,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              const SizedBox(width: 8.0),
+              IconButton(
+                icon: Icon(
+                  _selectedPdf == null ? Icons.picture_as_pdf : Icons.check,
+                ),
+                onPressed: isLoading ? null : _pickPdf,
                 color: Theme.of(context).colorScheme.secondary,
               ),
               const SizedBox(width: 8.0),
