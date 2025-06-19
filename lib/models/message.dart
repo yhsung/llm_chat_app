@@ -21,12 +21,14 @@ class Message {
   final String content;
   final DateTime timestamp;
   final String? imageBase64;
+  final List<double>? embedding;
 
   Message({
     String? id,
     required this.role,
     required this.content,
     this.imageBase64,
+    this.embedding,
     DateTime? timestamp,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
@@ -36,6 +38,7 @@ class Message {
     MessageRole? role,
     String? content,
     String? imageBase64,
+    List<double>? embedding,
     DateTime? timestamp,
   }) {
     return Message(
@@ -43,6 +46,7 @@ class Message {
       role: role ?? this.role,
       content: content ?? this.content,
       imageBase64: imageBase64 ?? this.imageBase64,
+      embedding: embedding ?? this.embedding,
       timestamp: timestamp ?? this.timestamp,
     );
   }
@@ -53,6 +57,7 @@ class Message {
       'role': role.toString().split('.').last,
       'content': content,
       if (imageBase64 != null) 'imageBase64': imageBase64,
+      if (embedding != null) 'embedding': embedding,
       'timestamp': timestamp.toIso8601String(),
     };
   }
@@ -66,6 +71,7 @@ class Message {
       ),
       content: json['content'],
       imageBase64: json['imageBase64'],
+      embedding: (json['embedding'] as List?)?.map((e) => (e as num).toDouble()).toList(),
       timestamp: DateTime.parse(json['timestamp']),
     );
   }
