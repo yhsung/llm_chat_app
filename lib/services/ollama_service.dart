@@ -6,8 +6,10 @@ import 'llm_service.dart';
 class OllamaService implements LlmService {
   static const String _endpointKey = 'ollama_endpoint';
   static const String _modelKey = 'ollama_model';
+  static const String _embeddingModelKey = 'ollama_embedding_model';
   static const String _defaultEndpoint = 'http://localhost:11434';
   static const String _defaultModel = 'llama2';
+  static const String _defaultEmbeddingModel = 'nomic-embed-text';
 
   final Dio _dio = Dio();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -116,6 +118,15 @@ class OllamaService implements LlmService {
     return await _secureStorage.read(key: _modelKey) ?? _defaultModel;
   }
 
+  Future<void> setEmbeddingModel(String model) async {
+    await _secureStorage.write(key: _embeddingModelKey, value: model);
+  }
+
+  Future<String> getCurrentEmbeddingModel() async {
+    return await _secureStorage.read(key: _embeddingModelKey) ??
+        _defaultEmbeddingModel;
+  }
+
   Future<void> setEndpoint(String endpoint) async {
     await _secureStorage.write(key: _endpointKey, value: endpoint);
   }
@@ -127,11 +138,11 @@ class OllamaService implements LlmService {
   @override
   Future<List<double>> embedText(String text) async {
     final endpoint = await _secureStorage.read(key: _endpointKey) ?? _defaultEndpoint;
-    final model = await getCurrentModel();
+    final model = await getCurrentEmbeddingModel();
 
     try {
       final response = await _dio.post(
-        '$endpoint/api/embeddings',
+        '$endpoint/api/embed',
         options: Options(headers: {'Content-Type': 'application/json'}),
         data: {
           'model': model,

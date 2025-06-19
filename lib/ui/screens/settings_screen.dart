@@ -435,6 +435,7 @@ class OllamaSettings extends ConsumerStatefulWidget {
 
 class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
   final TextEditingController _endpointController = TextEditingController();
+  final TextEditingController _embeddingModelController = TextEditingController();
   String? _selectedModel;
   List<String> _availableModels = [];
   bool _isLoading = false;
@@ -448,6 +449,7 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
   @override
   void dispose() {
     _endpointController.dispose();
+    _embeddingModelController.dispose();
     super.dispose();
   }
 
@@ -465,6 +467,10 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
 
       // Load current model
       final currentModel = await ollamaService.getCurrentModel();
+
+      // Load embedding model
+      final embeddingModel = await ollamaService.getCurrentEmbeddingModel();
+      _embeddingModelController.text = embeddingModel;
 
       // Load available models
       final models = await ollamaService.getAvailableModels();
@@ -503,6 +509,10 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
       if (_selectedModel != null) {
         await ollamaService.setModel(_selectedModel!);
       }
+
+      await ollamaService.setEmbeddingModel(
+        _embeddingModelController.text.trim(),
+      );
 
       await _loadSettings();
 
@@ -555,6 +565,14 @@ class _OllamaSettingsState extends ConsumerState<OllamaSettings> {
                 _selectedModel = value;
               });
             },
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _embeddingModelController,
+            decoration: const InputDecoration(
+              labelText: 'Embedding Model',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
