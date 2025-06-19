@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:pdf_text/pdf_text.dart';
+import 'package:doc_text_extractor/doc_text_extractor.dart';
 import '../../models/message.dart';
 import '../../providers/chat_providers.dart';
 import '../widgets/message_bubble.dart';
@@ -152,10 +152,14 @@ class _MessageInputState extends ConsumerState<MessageInput> {
           .read(activeChatSessionProvider.notifier)
           .sendMessageWithImage(text, base64Image);
     } else if (_selectedPdf != null) {
-      final doc = await PDFDoc.fromFile(_selectedPdf!);
-      final pdfText = await doc.text;
+      final extractor = TextExtractor();
+      final result = await extractor.extractText(
+        _selectedPdf!.path,
+        isUrl: false,
+      );
+      final pdfText = result.text;
       final displayText =
-          text.isNotEmpty ? text : 'Summarize PDF: ${_selectedPdf!.path.split('/').last}';
+          text.isNotEmpty ? text : 'Summarize PDF: ${result.filename}';
       await ref
           .read(activeChatSessionProvider.notifier)
           .sendMessageWithPdf(displayText, pdfText);
