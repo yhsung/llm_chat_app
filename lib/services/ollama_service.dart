@@ -123,4 +123,30 @@ class OllamaService implements LlmService {
   Future<String> getEndpoint() async {
     return await _secureStorage.read(key: _endpointKey) ?? _defaultEndpoint;
   }
+
+  @override
+  Future<List<double>> embedText(String text) async {
+    final endpoint = await _secureStorage.read(key: _endpointKey) ?? _defaultEndpoint;
+    final model = await getCurrentModel();
+
+    try {
+      final response = await _dio.post(
+        '$endpoint/api/embeddings',
+        options: Options(headers: {'Content-Type': 'application/json'}),
+        data: {
+          'model': model,
+          'prompt': text,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['embedding'] as List;
+        return data.map((e) => (e as num).toDouble()).toList();
+      } else {
+        throw Exception('Failed to get embedding from Ollama: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error communicating with Ollama: $e');
+    }
+  }
 }
