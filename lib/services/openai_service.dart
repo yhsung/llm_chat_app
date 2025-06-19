@@ -119,6 +119,43 @@ class OpenAiService implements LlmService {
   }
 
   @override
+  Future<List<double>> embedText(String text) async {
+    final apiKey = await _secureStorage.read(key: _apiKeyKey);
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('OpenAI API key not configured');
+    }
+
+    const embeddingModel = 'text-embedding-3-small';
+
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/embeddings',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+        ),
+        data: {
+          'model': embeddingModel,
+          'input': text,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'][0]['embedding'] as List;
+        return data.map((e) => (e as num).toDouble()).toList();
+      } else {
+        throw Exception(
+          'Failed to get embedding from OpenAI: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error requesting embedding from OpenAI: $e');
+    }
+  }
+
+  @override
   Future<List<String>> getAvailableModels() async {
     return ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'];
   }

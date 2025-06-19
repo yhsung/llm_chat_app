@@ -181,4 +181,55 @@ class ActiveChatSessionNotifier extends StateNotifier<ChatSession?> {
       _ref.read(isLoadingProvider.notifier).state = false;
     }
   }
+
+  Future<void> sendMessageWithPdf(
+    String content,
+    String pdfText,
+  ) async {
+    if (state == null) return;
+
+    ChatSession? updatedSession;
+
+    _ref.read(isLoadingProvider.notifier).state = true;
+
+    try {
+      final llmService = _ref.read(selectedLlmServiceProvider);
+
+      final embedding = await llmService.embedText(pdfText);
+
+      final userMessage = Message(
+        role: MessageRole.user,
+        content: content,
+        embedding: embedding,
+      );
+
+      updatedSession = state!.addMessage(userMessage);
+      state = updatedSession;
+      _ref.read(chatSessionsProvider.notifier).updateSession(updatedSession!);
+
+      final messagesWithPdf = [
+        ...updatedSession.messages,
+        Message(role: MessageRole.user, content: pdfText),
+      ];
+
+      final assistantMessage =
+          await llmService.sendMessage(messagesWithPdf);
+
+      final finalSession = updatedSession.addMessage(assistantMessage);
+      state = finalSession;
+      _ref.read(chatSessionsProvider.notifier).updateSession(finalSession);
+    } catch (e) {
+      final errorMessage = Message(
+        role: MessageRole.assistant,
+        content: 'Error: ${e.toString()}',
+      );
+
+      final sessionForError = updatedSession ?? state!;
+      final finalSession = sessionForError.addMessage(errorMessage);
+      state = finalSession;
+      _ref.read(chatSessionsProvider.notifier).updateSession(finalSession);
+    } finally {
+      _ref.read(isLoadingProvider.notifier).state = false;
+    }
+  }
 }

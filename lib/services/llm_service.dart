@@ -15,6 +15,9 @@ abstract class LlmService {
     List<Message> messages,
     String base64Image,
   );
+
+  /// Generate an embedding vector for the provided text
+  Future<List<double>> embedText(String text);
   
   /// Get the available models for this service
   Future<List<String>> getAvailableModels();

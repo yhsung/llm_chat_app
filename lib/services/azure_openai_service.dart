@@ -129,4 +129,46 @@ class AzureOpenAiService implements LlmService {
   Future<String> getApiVersion() async {
     return await _secureStorage.read(key: _apiVersionKey) ?? _defaultApiVersion;
   }
+
+  @override
+  Future<List<double>> embedText(String text) async {
+    final apiKey = await _secureStorage.read(key: _apiKeyKey);
+    final endpoint = await _secureStorage.read(key: _endpointKey);
+    final deployment = await getCurrentModel();
+    final apiVersion = await _secureStorage.read(key: _apiVersionKey) ?? _defaultApiVersion;
+
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('Azure OpenAI API key not configured');
+    }
+
+    if (endpoint == null || endpoint.isEmpty) {
+      throw Exception('Azure OpenAI endpoint not configured');
+    }
+
+    final url = '$endpoint/openai/deployments/$deployment/embeddings?api-version=$apiVersion';
+
+    try {
+      final response = await _dio.post(
+        url,
+        options: Options(
+          headers: {
+            'api-key': apiKey,
+            'Content-Type': 'application/json',
+          },
+        ),
+        data: {
+          'input': text,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'][0]['embedding'] as List;
+        return data.map((e) => (e as num).toDouble()).toList();
+      } else {
+        throw Exception('Failed to get embedding from Azure OpenAI: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error requesting embedding from Azure OpenAI: $e');
+    }
+  }
 }
