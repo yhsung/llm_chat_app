@@ -54,6 +54,7 @@ dependencies:
   image_picker: ^1.0.4
   file_picker: ^10.2.0
   doc_text_extractor: ^1.0.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
