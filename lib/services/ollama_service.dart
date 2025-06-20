@@ -142,7 +142,7 @@ class OllamaService implements LlmService {
 
     try {
       final response = await _dio.post(
-        '$endpoint/api/embed',
+        '$endpoint/api/embeddings',
         options: Options(headers: {'Content-Type': 'application/json'}),
         data: {
           'model': model,
@@ -151,8 +151,12 @@ class OllamaService implements LlmService {
       );
 
       if (response.statusCode == 200) {
-        final data = response.data['embedding'] as List;
-        return data.map((e) => (e as num).toDouble()).toList();
+        final embeddingData = response.data['embedding'];
+        if (embeddingData is List) {
+          return embeddingData.map((e) => (e as num).toDouble()).toList();
+        } else {
+          throw Exception('Invalid embedding response from Ollama');
+        }
       } else {
         throw Exception('Failed to get embedding from Ollama: ${response.statusCode}');
       }
